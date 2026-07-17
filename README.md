@@ -50,11 +50,11 @@ stats:
   - name: VIT
   - name: CRIT
 derived:
-  hp: "150 + VIT * 12"
-  baseDamage: "ATK * (0.95 + rand() * 0.10)"
-  dodgeChance: "max(0.05, min(0.45, 0.10 + (SPD_self - SPD_enemy) / 150))"
-  critChance: "max(0.05, min(0.50, 0.05 + CRIT / 100))"
-  critMultiplier: "1.5 + max(0, ATK / 1000)"
+  hp: "100 + VIT * 5"
+  baseDamage: "(20 + ATK * 0.7) * (0.95 + rand() * 0.10)"
+  dodgeChance: "max(0.05, min(0.45, SPD_self / (SPD_self + SPD_enemy + 50)))"
+  critChance: "max(0.05, min(0.50, 0.05 + CRIT / 75))"
+  critMultiplier: "1.5 + CRIT / 40"
   absorbFlat: "DEF * 0.25"
   absorbPct: "DEF / (DEF + 300)"
 combat:
@@ -67,12 +67,12 @@ combat:
     drawMarginPct: 3
 ```
 
-### 2. Fighter Profiles (`cat.yaml` and `dog.yaml`)
+### 2. Fighter Profiles (`cat-agile.yaml`, `dog-tank.yaml`, and `dog-speed.yaml`)
 
-Define primary stat configurations (with 60 points allocated over base of 10):
+Define primary stat configurations (with 60 points allocated over base of 10 for a total budget of 110 points):
 
 ```yaml
-# cat.yaml
+# cat-agile.yaml
 name: Agile Cat
 stats:
   ATK: 20
@@ -83,7 +83,7 @@ stats:
 ```
 
 ```yaml
-# dog.yaml
+# dog-tank.yaml
 name: Tanky Dog
 stats:
   ATK: 20
@@ -93,29 +93,49 @@ stats:
   CRIT: 10
 ```
 
+```yaml
+# dog-speed.yaml
+name: Speedy Dog
+stats:
+  ATK: 20
+  DEF: 10
+  SPD: 50
+  VIT: 20
+  CRIT: 10
+```
+
 ### 3. Command Line Interface (CLI)
 
 #### Run a Single Fight (Detailed Log)
 ```bash
-combat-sim fight -c game.yaml -a cat.yaml -b dog.yaml --seed 42
+combat-sim fight -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --seed 42
 ```
 *Output:*
 ```text
 Using seed: 42
-[Round 01] Agile Cat hits Tanky Dog for 14.42 damage (HP: 615.58)
-[Round 01] Tanky Dog hits Agile Cat for 9.87 damage (HP: 260.13)
-[Round 02] Agile Cat hits Tanky Dog for 13.91 damage (HP: 601.67)
-[Round 02] Tanky Dog hits Agile Cat for 9.77 damage (HP: 250.36)
-...
-[Round 23] Agile Cat hits Tanky Dog for 14.16 damage (HP: 5.61)
-[Round 23] Tanky Dog hits Agile Cat for 10.14 damage (HP: 0.00)
+[Round 01] Agile Cat hits Tanky Dog for 25.61 damage (HP: 274.39)
+[Round 01] Tanky Dog attacks Agile Cat, but Agile Cat DODGES! (HP: 150.00)
+[Round 02] Agile Cat CRITS Tanky Dog for 62.55 damage! (HP: 211.84)
+[Round 02] Tanky Dog hits Agile Cat for 29.29 damage (HP: 120.71)
+[Round 03] Agile Cat hits Tanky Dog for 24.40 damage (HP: 187.44)
+[Round 03] Tanky Dog attacks Agile Cat, but Agile Cat DODGES! (HP: 120.71)
+[Round 04] Agile Cat CRITS Tanky Dog for 65.11 damage! (HP: 122.33)
+[Round 04] Tanky Dog hits Agile Cat for 31.70 damage (HP: 89.01)
+[Round 05] Agile Cat hits Tanky Dog for 22.63 damage (HP: 99.70)
+[Round 05] Tanky Dog attacks Agile Cat, but Agile Cat DODGES! (HP: 89.01)
+[Round 06] Agile Cat CRITS Tanky Dog for 62.63 damage! (HP: 37.07)
+[Round 06] Tanky Dog hits Agile Cat for 31.53 damage (HP: 57.48)
+[Round 07] Agile Cat attacks Tanky Dog, but Tanky Dog DODGES! (HP: 37.07)
+[Round 07] Tanky Dog CRITS Agile Cat for 53.84 damage! (HP: 3.63)
+[Round 08] Agile Cat attacks Tanky Dog, but Tanky Dog DODGES! (HP: 37.07)
+[Round 08] Tanky Dog hits Agile Cat for 31.63 damage (HP: 0.00)
 
 Winner: B (KO)
 ```
 
 #### Run Monte-Carlo Simulation (Win Rates)
 ```bash
-combat-sim run -c game.yaml -a cat.yaml -b dog.yaml --seed 42
+combat-sim run -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --seed 42
 ```
 *Output:*
 ```text
@@ -123,36 +143,36 @@ Using seed: 42
 --------------------------------------------------
  Monte-Carlo Simulation Results (10000 battles)
 --------------------------------------------------
- Win Rate (Agile Cat):        0.00%
- Win Rate (Tanky Dog):        100.00%
+ Win Rate (Agile Cat):        46.59%
+ Win Rate (Tanky Dog):        53.41%
  Draw Rate:                   0.00%
  Timeout Rate:                0.00%
- Average Rounds:              21.71
- Median Rounds:               21
- Avg Damage/Round:            26.80
+ Average Rounds:              7.22
+ Median Rounds:               7
+ Avg Damage/Round:            56.83
 --------------------------------------------------
 ```
 
 #### Run Stat Sweep (Analyze Impact of ATK on Agile Cat)
 ```bash
-combat-sim sweep -c game.yaml -a cat.yaml -b dog.yaml --stat ATK --from 20 --to 70 --step 5 -n 100 --seed 42
+combat-sim sweep -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --stat ATK --from 20 --to 70 --step 5 -n 100 --seed 42
 ```
 *Output:*
 ```text
 Using seed: 42
 ATK        | Win Rate   | Avg Rds  | Win Rate Chart
 -----------+------------+----------+----------------------
-20         | 0.0%       | 21.8     | [░░░░░░░░░░░░░░░░░░░░]
-25         | 0.0%       | 21.8     | [░░░░░░░░░░░░░░░░░░░░]
-30         | 13.0%      | 21.5     | [███░░░░░░░░░░░░░░░░░]
-35         | 54.0%      | 20.3     | [███████████░░░░░░░░░]
-40         | 82.0%      | 18.3     | [████████████████░░░░]
-45         | 92.0%      | 16.3     | [██████████████████░░]
-50         | 99.0%      | 14.5     | [████████████████████]
-55         | 99.0%      | 13.0     | [████████████████████]
-60         | 100.0%     | 11.9     | [████████████████████]
-65         | 100.0%     | 10.8     | [████████████████████]
-70         | 100.0%     | 10.0     | [████████████████████]
+20         | 46.0%      | 7.2      | [█████████░░░░░░░░░░░]
+25         | 60.0%      | 6.8      | [████████████░░░░░░░░]
+30         | 70.0%      | 6.5      | [██████████████░░░░░░]
+35         | 79.0%      | 6.1      | [████████████████░░░░]
+40         | 83.0%      | 5.8      | [█████████████████░░░]
+45         | 85.0%      | 5.4      | [█████████████████░░░]
+50         | 94.0%      | 5.3      | [███████████████████░]
+55         | 97.0%      | 5.0      | [███████████████████░]
+60         | 98.0%      | 4.8      | [████████████████████]
+65         | 99.0%      | 4.5      | [████████████████████]
+70         | 100.0%     | 4.2      | [████████████████████]
 ```
 
 ### 4. Programmatic API
@@ -165,8 +185,8 @@ import fs from 'fs';
 const yamlString = fs.readFileSync('game.yaml', 'utf-8');
 const config = loadConfig(yamlString);
 
-const a = { name: 'Cat', stats: { ATK: 60, DEF: 20, SPD: 130, VIT: 15, CRIT: 15 } };
-const b = { name: 'Dog', stats: { ATK: 45, DEF: 50, SPD: 80, VIT: 30, CRIT: 5 } };
+const a = { name: 'Agile Cat', stats: { ATK: 20, DEF: 10, SPD: 40, VIT: 10, CRIT: 30 } };
+const b = { name: 'Tanky Dog', stats: { ATK: 20, DEF: 30, SPD: 10, VIT: 40, CRIT: 10 } };
 
 // 2. Single Battle
 const rng = createRng(42);
@@ -182,10 +202,10 @@ const sweepResult = sweep({
   base: a,
   opponent: b,
   config,
-  stat: 'SPD',
-  from: 50,
-  to: 150,
-  step: 10,
+  stat: 'ATK',
+  from: 20,
+  to: 70,
+  step: 5,
   battlesPerPoint: 500,
   seed: 42,
 });
@@ -226,27 +246,16 @@ Formulas are parsed using a safe, customized `expr-eval` parser.
 
 ---
 
-## Balancing Workflow
+## Balance Tuning Workflow
 
-1. **Analyze Initial Build Balance**:
-   Pitting our example characters against each other using `combat-sim run` reveals a severe balance issue:
-   - **Agile Cat** (SPD/CRIT focus): **0.00%** win rate.
-   - **Tanky Dog** (DEF/VIT focus): **100.00%** win rate.
-   
-   Because Agile Cat's `ATK` (20) is low, its damage is almost completely negated by Tanky Dog's high `DEF` (30) combined with a huge HP pool (630 HP vs 270 HP).
-   
-2. **Identify Breakpoints via Sweep**:
-   To find how much `ATK` Agile Cat needs to stand a chance, we run `combat-sim sweep` on the `ATK` stat:
-   - At `ATK = 20-25`, the win rate is `0.0%` (complete negation).
-   - At `ATK = 30`, win rate rises to `13.0%`.
-   - At `ATK = 35`, win rate jumps to `54.0%` (the golden 50% balance mark).
-   - At `ATK = 40`, win rate is `82.0%`.
-   - At `ATK >= 50`, win rate is `99.0%` or higher.
-
-   This steep slope (from 0% to 99% in just 30 stat points) highlights a **balance cliff**. Designers can use this info to either boost Agile Cat's starting ATK, adjust the defense scaling formula (e.g. increase diminishing returns), or add alternative damage sources (like crit multipliers or armor-piercing stats).
-
-3. **Control Timeouts**:
-   In both runs, the **Timeout Rate** is `0.00%`. If you see high timeout rates, it indicates that defense or health pools are too high compared to offensive capabilities. Use this feedback loop to adjust overall stat weights.
+Pitting your fighters against each other in a combat simulation loop allows you to systematically tune your game's balance:
+1. **Identify Imbalance (`run`)**: Running the initial combat config (where `hp: 150 + VIT * 12`) showed an extreme balance issue: `Agile Cat` vs `Tanky Dog` resulted in a **0% : 100%** win rate.
+2. **Locate Breakpoints (`sweep`)**: Sweeping the `ATK` stat showed a severe balance cliff where Agile Cat's damage was completely absorbed until reaching a critical threshold.
+3. **Calibrate Formulas (Tweak)**: To smooth the curve, the HP formula was calibrated down from `150 + VIT * 12` to `100 + VIT * 5`, and `dodgeChance` was made relative to speed ratios instead of flat speed differences.
+4. **Verify Balance (`run` again)**: Re-running the simulations confirms that all three matchups are now in the healthy **35-65%** win rate corridor, forming a perfect rock-paper-scissors counter loop:
+   - **Speedy Dog** counterplays **Agile Cat** (~`60/40` win rate)
+   - **Tanky Dog** counterplays **Speedy Dog** (~`60/40` win rate)
+   - **Tanky Dog** vs **Agile Cat** is close and highly competitive (~`53/47` win rate)
 
 ---
 

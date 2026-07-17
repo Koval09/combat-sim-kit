@@ -1,0 +1,7 @@
+name: Speedy Dog
+stats:
+  ATK: 20
+  DEF: 10
+  SPD: 50
+  VIT: 20
+  CRIT: 10

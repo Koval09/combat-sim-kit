@@ -5,11 +5,11 @@ stats:
   - name: VIT
   - name: CRIT
 derived:
-  hp: "150 + VIT * 12"
-  baseDamage: "ATK * (0.95 + rand() * 0.10)"
-  dodgeChance: "max(0.05, min(0.45, 0.10 + (SPD_self - SPD_enemy) / 150))"
-  critChance: "max(0.05, min(0.50, 0.05 + CRIT / 100))"
-  critMultiplier: "1.5 + max(0, ATK / 1000)"
+  hp: "100 + VIT * 5"
+  baseDamage: "(20 + ATK * 0.7) * (0.95 + rand() * 0.10)"
+  dodgeChance: "max(0.05, min(0.45, SPD_self / (SPD_self + SPD_enemy + 50)))"
+  critChance: "max(0.05, min(0.50, 0.05 + CRIT / 75))"
+  critMultiplier: "1.5 + CRIT / 40"
   absorbFlat: "DEF * 0.25"
   absorbPct: "DEF / (DEF + 300)"
 combat:

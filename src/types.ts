@@ -60,4 +60,14 @@ export interface BattleResult {
   rounds: number;
   log: BattleEvent[];
 }
-
+export interface MonteCarloResult {
+  battles: number;
+  winRateA: number;
+  winRateB: number;
+  drawRate: number;
+  timeoutRate: number;
+  avgRounds: number;
+  medianRounds: number;
+  roundsHistogram: Record<number, number>;
+  avgDamagePerRound: number;
+}

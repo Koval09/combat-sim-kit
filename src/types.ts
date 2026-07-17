@@ -44,3 +44,20 @@ export interface Fighter {
   name: string;
   stats: Record<string, number>;
 }
+
+export interface BattleEvent {
+  round: number;
+  attacker: string;
+  defender: string;
+  type: 'hit' | 'crit' | 'dodge';
+  damage: number;
+  defenderHp: number;
+}
+
+export interface BattleResult {
+  winner: 'a' | 'b' | 'draw';
+  winReason: 'ko' | 'timeout';
+  rounds: number;
+  log: BattleEvent[];
+}
+

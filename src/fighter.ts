@@ -21,6 +21,9 @@ export class FighterInstance {
   private rng: Rng | null = null;
   private derivedCache = new Map<string, number>();
 
+  maxHp = 0;
+  currentHp = 0;
+
   constructor(name: string, stats: Record<string, number>, config: Config) {
     this.name = name;
     this.stats = stats;
@@ -44,6 +47,8 @@ export class FighterInstance {
     this.enemy = enemy;
     this.rng = rng;
     this.derivedCache.clear();
+    this.maxHp = this.getDerived('hp');
+    this.currentHp = this.maxHp;
   }
 
   /**
@@ -84,8 +89,12 @@ export class FighterInstance {
   /**
    * Evaluates an expression within the context of this fighter, their opponent, and the RNG.
    */
-  evaluateExpression(expr: Expression): number {
+  evaluateExpression(expr: Expression, extraContext?: Record<string, any>): number {
     const context: Record<string, any> = {};
+
+    if (extraContext) {
+      Object.assign(context, extraContext);
+    }
 
     // 1. Add own stats (as base name and with _self suffix)
     for (const statName of Object.keys(this.stats)) {

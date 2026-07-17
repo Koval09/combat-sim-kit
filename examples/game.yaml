@@ -1,0 +1,22 @@
+stats:
+  - name: ATK
+  - name: DEF
+  - name: SPD
+  - name: VIT
+  - name: CRIT
+derived:
+  hp: "150 + VIT * 12"
+  baseDamage: "ATK * (0.95 + rand() * 0.10)"
+  dodgeChance: "max(0.05, min(0.45, 0.10 + (SPD_self - SPD_enemy) / 150))"
+  critChance: "max(0.05, min(0.50, 0.05 + CRIT / 100))"
+  critMultiplier: "1.5 + max(0, ATK / 1000)"
+  absorbFlat: "DEF * 0.25"
+  absorbPct: "DEF / (DEF + 300)"
+combat:
+  maxRounds: 50
+  initiative: "SPD * (1.0 + rand() * 0.2)"
+  damage: "(baseDamage * (isCrit ? critMultiplier : 1) - absorbFlat_enemy) * (1 - absorbPct_enemy)"
+  minDamage: 1
+  timeout:
+    winner: "hpPercent"
+    drawMarginPct: 3

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { hello } from '../src/index';
+import { createRng } from '../src/index';
 
-test('hello', () => {
-  expect(hello()).toBe('world');
+test('index API exports', () => {
+  expect(createRng).toBeDefined();
 });

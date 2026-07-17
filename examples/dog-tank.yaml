@@ -1,0 +1,7 @@
+name: Dog Tank
+stats:
+  ATK: 45
+  DEF: 50
+  SPD: 80
+  VIT: 30
+  CRIT: 5

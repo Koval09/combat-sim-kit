@@ -1,0 +1,7 @@
+name: Cat Agile
+stats:
+  ATK: 60
+  DEF: 20
+  SPD: 130
+  VIT: 15
+  CRIT: 15

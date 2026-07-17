@@ -2,6 +2,9 @@ import { Expression } from 'expr-eval';
 import { Config, Fighter } from './types';
 import { Rng } from './rng';
 import { setActiveRng, clearActiveRng } from './config';
+import fs from 'fs';
+import yaml from 'yaml';
+import { z } from 'zod';
 
 /**
  * FighterInstance represents a fighter in a combat simulation.
@@ -162,4 +165,31 @@ export class FighterInstance {
  */
 export function createFighter(fighter: Fighter, config: Config): FighterInstance {
   return new FighterInstance(fighter.name, fighter.stats, config);
+}
+
+export const FighterSchema = z.object({
+  name: z.string().min(1, 'Fighter name cannot be empty'),
+  stats: z.record(z.string(), z.number()),
+});
+
+export function loadFighter(filePath: string): Fighter {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Fighter file not found: ${filePath}`);
+  }
+  const content = fs.readFileSync(filePath, 'utf-8');
+  let parsed: any;
+  try {
+    parsed = yaml.parse(content);
+  } catch (err: any) {
+    throw new Error(`Invalid YAML format in fighter file "${filePath}": ${err.message}`);
+  }
+  try {
+    return FighterSchema.parse(parsed);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      const formatted = err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
+      throw new Error(`Fighter schema validation error in "${filePath}": ${formatted}`);
+    }
+    throw err;
+  }
 }

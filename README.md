@@ -20,6 +20,12 @@ Whether you're balancing a roguelike, a strategy game, or an RPG, `combat-sim-ki
 
 ---
 
+## Requirements
+
+- **Node.js**: `>=20` (uses `AsyncLocalStorage` from `node:async_hooks` to guarantee nested-safe and concurrent-safe RNG isolation).
+
+---
+
 ## Installation
 
 ### As a Library
@@ -135,7 +141,7 @@ Winner: B (KO)
 
 #### Run Monte-Carlo Simulation (Win Rates)
 ```bash
-combat-sim run -c examples/game.yaml -a examples/cat-agile.yaml -b examples/dog-tank.yaml --seed 42
+combat-sim run -c examples/game.yaml -a examples/cat-agile.yaml -b examples/dog-tank.yaml -n 10000 --seed 42
 ```
 *Output:*
 ```text
@@ -178,26 +184,28 @@ ATK        | Win Rate   | Avg Rds  | Win Rate Chart
 ### 4. Programmatic API
 
 ```typescript
-import { loadConfig, createRng, simulateBattle, runMonteCarlo, sweep } from 'combat-sim-kit';
+import { loadConfig, loadFighter, createRng, simulateBattle, runMonteCarlo, sweep } from 'combat-sim-kit';
 import fs from 'fs';
 
 // 1. Load config
-const yamlString = fs.readFileSync('game.yaml', 'utf-8');
+const yamlString = fs.readFileSync('examples/game.yaml', 'utf-8');
 const config = loadConfig(yamlString);
 
-const a = { name: 'Agile Cat', stats: { ATK: 20, DEF: 10, SPD: 40, VIT: 10, CRIT: 30 } };
-const b = { name: 'Tanky Dog', stats: { ATK: 20, DEF: 30, SPD: 10, VIT: 40, CRIT: 10 } };
+// 2. Load fighters from YAML
+const a = loadFighter('examples/cat-agile.yaml');
+const b = loadFighter('examples/dog-tank.yaml');
+// Alternative (inline-objects): const a = { name: 'Agile Cat', stats: { ATK: 20, DEF: 10, SPD: 40, VIT: 10, CRIT: 30 } };
 
-// 2. Single Battle
+// 3. Single Battle
 const rng = createRng(42);
 const battleResult = simulateBattle({ a, b, config, rng });
 console.log(`Battle winner: ${battleResult.winner} in ${battleResult.rounds} rounds`);
 
-// 3. Monte-Carlo Sim
+// 4. Monte-Carlo Sim
 const mcResult = runMonteCarlo({ a, b, config, battles: 1000, seed: 12345 });
 console.log(`Cat Winrate: ${mcResult.winRateA * 100}%`);
 
-// 4. Sweep analysis
+// 5. Sweep analysis
 const sweepResult = sweep({
   base: a,
   opponent: b,
@@ -262,10 +270,10 @@ Pitting your fighters against each other in a combat simulation loop allows you 
 ## FAQ
 
 #### How many battles do I need for Monte-Carlo?
-The standard error of a win rate estimate is approximately \( \sigma = \frac{1}{2\sqrt{N}} \), where \( N \) is the number of battles.
-- \( N = 100 \): margin of error is ~\( \pm 5\% \)
-- \( N = 1,000 \): margin of error is ~\( \pm 1.5\% \)
-- \( N = 10,000 \): margin of error is ~\( \pm 0.5\% \)
+The standard error of a win rate estimate is approximately $\sigma = \frac{1}{2\sqrt{N}}$, where $N$ is the number of battles.
+- $N = 100$: margin of error is ~$\pm 5\%$
+- $N = 1,000$: margin of error is ~$\pm 1.5\%$
+- $N = 10,000$: margin of error is ~$\pm 0.5\%$
 
 For balancing, **2,000 to 10,000** battles per data point is the sweet spot.
 

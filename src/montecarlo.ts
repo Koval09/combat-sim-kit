@@ -32,7 +32,6 @@ export function runMonteCarlo({
   const roundsHistogram: Record<number, number> = {};
 
   const masterRng = createRng(seed);
-  let lastCalledIndex = -1;
 
   for (let i = 0; i < battles; i++) {
     // Generate sub-seed for this battle derived deterministically from the master seed
@@ -64,16 +63,12 @@ export function runMonteCarlo({
       totalDamage += event.damage;
     }
 
-    // Progress callback (ensuring at least 500 battles gap between calls)
+    // Progress callback (ensuring at least 500 battles gap between calls, but always run on final step)
     const completed = i + 1;
     if (completed === battles) {
-      if (lastCalledIndex === -1 || completed - lastCalledIndex >= 500) {
-        onProgress?.(completed, battles);
-        lastCalledIndex = completed;
-      }
+      onProgress?.(completed, battles);
     } else if (completed % 500 === 0) {
       onProgress?.(completed, battles);
-      lastCalledIndex = completed;
     }
   }
 

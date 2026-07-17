@@ -108,7 +108,7 @@ stats:
 
 #### Run a Single Fight (Detailed Log)
 ```bash
-combat-sim fight -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --seed 42
+combat-sim fight -c examples/game.yaml -a examples/cat-agile.yaml -b examples/dog-tank.yaml --seed 42
 ```
 *Output:*
 ```text
@@ -135,7 +135,7 @@ Winner: B (KO)
 
 #### Run Monte-Carlo Simulation (Win Rates)
 ```bash
-combat-sim run -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --seed 42
+combat-sim run -c examples/game.yaml -a examples/cat-agile.yaml -b examples/dog-tank.yaml --seed 42
 ```
 *Output:*
 ```text
@@ -155,7 +155,7 @@ Using seed: 42
 
 #### Run Stat Sweep (Analyze Impact of ATK on Agile Cat)
 ```bash
-combat-sim sweep -c game.yaml -a cat-agile.yaml -b dog-tank.yaml --stat ATK --from 20 --to 70 --step 5 -n 100 --seed 42
+combat-sim sweep -c examples/game.yaml -a examples/cat-agile.yaml -b examples/dog-tank.yaml --stat ATK --from 20 --to 70 --step 5 -n 100 --seed 42
 ```
 *Output:*
 ```text

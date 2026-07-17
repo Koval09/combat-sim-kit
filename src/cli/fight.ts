@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import fs from 'fs';
 import { loadConfig } from '../config';
 import { loadFighter } from '../fighter';
@@ -6,12 +6,20 @@ import { createRng } from '../rng';
 import { simulateBattle } from '../battle';
 import { formatBattleEvent } from './formatter';
 
+function parseSeed(val: string): number {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed)) {
+    throw new InvalidArgumentError('Seed must be a valid integer.');
+  }
+  return parsed;
+}
+
 export const fightCommand = new Command('fight')
   .description('Run a single combat simulation with detailed log')
   .requiredOption('-c, --config <file>', 'path to combat configuration YAML file')
   .requiredOption('-a, --fighter-a <file>', 'path to fighter A YAML file')
   .requiredOption('-b, --fighter-b <file>', 'path to fighter B YAML file')
-  .option('--seed <number>', 'random seed (number) for the battle', (val) => parseInt(val, 10))
+  .option('--seed <number>', 'random seed (number) for the battle', parseSeed)
   .action((options) => {
     try {
       if (!fs.existsSync(options.config)) {
@@ -35,8 +43,9 @@ export const fightCommand = new Command('fight')
 
       const reason = result.winReason === 'ko' ? 'KO' : 'Timeout';
       console.log(`\nWinner: ${result.winner === 'draw' ? 'Draw' : result.winner.toUpperCase()} (${reason})`);
-    } catch (err: any) {
-      console.error(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
       process.exit(1);
     }
   });

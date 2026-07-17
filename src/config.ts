@@ -2,20 +2,14 @@ import { Parser, Expression } from 'expr-eval';
 import yaml from 'yaml';
 import { z } from 'zod';
 import { Config, RawConfig, CompiledExpression } from './types';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
-let activeRng: (() => number) | null = null;
-
-export function setActiveRng(rngFunc: () => number) {
-  activeRng = rngFunc;
-}
-
-export function clearActiveRng() {
-  activeRng = null;
-}
+export const rngStorage = new AsyncLocalStorage<() => number>();
 
 // Create a parser instance and register 'rand'
 const parser = new Parser();
 parser.functions.rand = () => {
+  const activeRng = rngStorage.getStore();
   if (activeRng) {
     return activeRng();
   }
@@ -35,10 +29,23 @@ export const RawConfigSchema = z.object({
     damage: z.string(),
     minDamage: z.number().int().nonnegative('minDamage must be a non-negative integer'),
     timeout: z.object({
-      winner: z.string(),
+      winner: z.literal('hpPercent', {
+        errorMap: () => ({ message: 'timeout.winner must be "hpPercent"' }),
+      }),
       drawMarginPct: z.number().nonnegative('drawMarginPct must be non-negative'),
     }),
   }),
+}).superRefine((data, ctx) => {
+  const required = ['hp', 'dodgeChance', 'critChance'];
+  for (const req of required) {
+    if (!data.derived || !data.derived[req]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing required derived attribute "${req}"`,
+        path: ['derived'],
+      });
+    }
+  }
 });
 
 function compileAndValidate(
@@ -49,8 +56,9 @@ function compileAndValidate(
   let expr: Expression;
   try {
     expr = parser.parse(exprStr);
-  } catch (err: any) {
-    throw new Error(`Failed to parse expression in "${fieldName}": ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Failed to parse expression in "${fieldName}": ${msg}`);
   }
 
   const vars = expr.variables();
@@ -76,11 +84,12 @@ export function loadConfig(yamlString: string): Config {
     throw new Error('Config must be a string');
   }
 
-  let parsedYaml: any;
+  let parsedYaml: unknown;
   try {
     parsedYaml = yaml.parse(yamlString);
-  } catch (err: any) {
-    throw new Error(`Invalid YAML format: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Invalid YAML format: ${msg}`);
   }
 
   if (!parsedYaml || typeof parsedYaml !== 'object') {
@@ -91,7 +100,7 @@ export function loadConfig(yamlString: string): Config {
   let validated: RawConfig;
   try {
     validated = RawConfigSchema.parse(parsedYaml);
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       const formatted = err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
       throw new Error(`Schema validation error: ${formatted}`);
@@ -120,8 +129,9 @@ export function loadConfig(yamlString: string): Config {
     let parsed;
     try {
       parsed = parser.parse(exprStr);
-    } catch (err: any) {
-      throw new Error(`Failed to parse expression in "derived.${key}": ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to parse expression in "derived.${key}": ${msg}`);
     }
     const vars = parsed.variables();
     deps[key] = vars
@@ -199,21 +209,24 @@ export function loadConfig(yamlString: string): Config {
   for (const [key, compExpr] of Object.entries(compiledDerived)) {
     try {
       compExpr.expression.evaluate(dummyContext);
-    } catch (err: any) {
-      throw new Error(`Error evaluating expression for "derived.${key}": ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Error evaluating expression for "derived.${key}": ${msg}`);
     }
   }
 
   try {
     compiledInitiative.expression.evaluate(dummyContext);
-  } catch (err: any) {
-    throw new Error(`Error evaluating expression for "combat.initiative": ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Error evaluating expression for "combat.initiative": ${msg}`);
   }
 
   try {
     compiledDamage.expression.evaluate(dummyContext);
-  } catch (err: any) {
-    throw new Error(`Error evaluating expression for "combat.damage": ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Error evaluating expression for "combat.damage": ${msg}`);
   }
 
   return {

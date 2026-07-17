@@ -1,7 +1,7 @@
 import { Expression } from 'expr-eval';
 import { Config, Fighter } from './types';
 import { Rng } from './rng';
-import { setActiveRng, clearActiveRng } from './config';
+import { rngStorage } from './config';
 import fs from 'fs';
 import yaml from 'yaml';
 import { z } from 'zod';
@@ -145,18 +145,8 @@ export class FighterInstance {
       });
     }
 
-    // Set active RNG hook
-    if (this.rng) {
-      setActiveRng(() => this.rng!.random());
-    } else {
-      setActiveRng(() => 0.5); // Fallback stub
-    }
-
-    try {
-      return expr.evaluate(context);
-    } finally {
-      clearActiveRng();
-    }
+    const rngFunc = this.rng ? () => this.rng!.random() : () => 0.5;
+    return rngStorage.run(rngFunc, () => expr.evaluate(context));
   }
 }
 
@@ -177,15 +167,16 @@ export function loadFighter(filePath: string): Fighter {
     throw new Error(`Fighter file not found: ${filePath}`);
   }
   const content = fs.readFileSync(filePath, 'utf-8');
-  let parsed: any;
+  let parsed: unknown;
   try {
     parsed = yaml.parse(content);
-  } catch (err: any) {
-    throw new Error(`Invalid YAML format in fighter file "${filePath}": ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Invalid YAML format in fighter file "${filePath}": ${msg}`);
   }
   try {
     return FighterSchema.parse(parsed);
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       const formatted = err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
       throw new Error(`Fighter schema validation error in "${filePath}": ${formatted}`);

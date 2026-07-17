@@ -1,17 +1,33 @@
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import fs from 'fs';
 import { loadConfig } from '../config';
 import { loadFighter } from '../fighter';
 import { runMonteCarlo } from '../montecarlo';
 import { formatMonteCarloTable } from './formatter';
 
+function parseSeed(val: string): number {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed)) {
+    throw new InvalidArgumentError('Seed must be a valid integer.');
+  }
+  return parsed;
+}
+
+function parseBattles(val: string): number {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed) || parsed <= 0) {
+    throw new InvalidArgumentError('Number of battles must be a positive integer.');
+  }
+  return parsed;
+}
+
 export const runCommand = new Command('run')
   .description('Run Monte-Carlo combat simulation')
   .requiredOption('-c, --config <file>', 'path to combat configuration YAML file')
   .requiredOption('-a, --fighter-a <file>', 'path to fighter A YAML file')
   .requiredOption('-b, --fighter-b <file>', 'path to fighter B YAML file')
-  .option('-n, --battles <number>', 'number of battles to simulate', (val) => parseInt(val, 10), 10000)
-  .option('--seed <number>', 'random seed (number) for the simulation', (val) => parseInt(val, 10))
+  .option('-n, --battles <number>', 'number of battles to simulate', parseBattles, 10000)
+  .option('--seed <number>', 'random seed (number) for the simulation', parseSeed)
   .option('--json <file>', 'export simulation results to a JSON file')
   .action((options) => {
     try {
@@ -41,8 +57,9 @@ export const runCommand = new Command('run')
         fs.writeFileSync(options.json, JSON.stringify(result, null, 2), 'utf-8');
         console.log(`Results successfully exported to ${options.json}`);
       }
-    } catch (err: any) {
-      console.error(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
       process.exit(1);
     }
   });

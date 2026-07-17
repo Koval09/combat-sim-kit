@@ -56,7 +56,6 @@ describe('Battle Simulation (simulateBattle)', () => {
   });
 
   test('high dodge on both sides leads to timeout and draw or HP% win', () => {
-    const config = loadConfig(configYaml);
     // Custom config with extremely high dodge (e.g. 0.99)
     const customConfigYaml = configYaml.replace(
       'dodgeChance: "max(0.05, min(0.45, 0.10 + (SPD_self - SPD_enemy) / 150))"',

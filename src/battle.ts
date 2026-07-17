@@ -76,17 +76,21 @@ export function simulateBattle({
   }
 
   // Timeout logic
-  const hpPctA = (fighterA.currentHp / fighterA.maxHp) * 100;
-  const hpPctB = (fighterB.currentHp / fighterB.maxHp) * 100;
-  const diff = Math.abs(hpPctA - hpPctB);
-
   let winner: 'a' | 'b' | 'draw';
-  if (diff < config.combat.timeout.drawMarginPct) {
-    winner = 'draw';
-  } else if (hpPctA > hpPctB) {
-    winner = 'a';
+  if (config.combat.timeout.winner === 'hpPercent') {
+    const hpPctA = (fighterA.currentHp / fighterA.maxHp) * 100;
+    const hpPctB = (fighterB.currentHp / fighterB.maxHp) * 100;
+    const diff = Math.abs(hpPctA - hpPctB);
+
+    if (diff < config.combat.timeout.drawMarginPct) {
+      winner = 'draw';
+    } else if (hpPctA > hpPctB) {
+      winner = 'a';
+    } else {
+      winner = 'b';
+    }
   } else {
-    winner = 'b';
+    winner = 'draw';
   }
 
   return {

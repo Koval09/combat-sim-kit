@@ -9,6 +9,8 @@ stats:
 derived:
   hp: "100 + DEF * 10"
   baseDamage: "ATK * (0.9 + rand() * 0.2)"
+  dodgeChance: "0.1"
+  critChance: "0.1"
 combat:
   maxRounds: 50
   initiative: "SPD * (1.0 + rand() * 0.1)"
@@ -68,6 +70,8 @@ combat:
     const missingStatsYaml = `
 derived:
   hp: "100"
+  dodgeChance: "0.1"
+  critChance: "0.1"
 combat:
   maxRounds: 50
   initiative: "SPD"
@@ -87,6 +91,8 @@ stats:
   - name: DEF
 derived:
   hp: "100 + DEFF * 10"
+  dodgeChance: "0.1"
+  critChance: "0.1"
 combat:
   maxRounds: 50
   initiative: "ATK"
@@ -108,6 +114,8 @@ stats:
   - name: DEF
 derived:
   hp: "100 + DEF * 10"
+  dodgeChance: "0.1"
+  critChance: "0.1"
 combat:
   maxRounds: 50
   initiative: "SPD_typo"
@@ -129,6 +137,8 @@ stats:
 derived:
   hp: "10 + baseDamage"
   baseDamage: "ATK + hp"
+  dodgeChance: "0.1"
+  critChance: "0.1"
 combat:
   maxRounds: 50
   initiative: "ATK"
@@ -140,6 +150,49 @@ combat:
 `;
     expect(() => loadConfig(circularYaml)).toThrow(
       /Circular dependency detected in derived attributes/
+    );
+  });
+
+  test('config missing mandatory derived attribute (hp) throws clear error', () => {
+    const missingHpYaml = `
+stats:
+  - name: ATK
+derived:
+  dodgeChance: "0.1"
+  critChance: "0.1"
+combat:
+  maxRounds: 50
+  initiative: "ATK"
+  damage: "ATK"
+  minDamage: 1
+  timeout:
+    winner: "hpPercent"
+    drawMarginPct: 3
+`;
+    expect(() => loadConfig(missingHpYaml)).toThrow(
+      /Missing required derived attribute "hp"/
+    );
+  });
+
+  test('unknown identifier in combat.damage throws clear error', () => {
+    const unknownDamageYaml = `
+stats:
+  - name: ATK
+derived:
+  hp: "100"
+  dodgeChance: "0.1"
+  critChance: "0.1"
+combat:
+  maxRounds: 50
+  initiative: "ATK"
+  damage: "ATK_typo"
+  minDamage: 1
+  timeout:
+    winner: "hpPercent"
+    drawMarginPct: 3
+`;
+    expect(() => loadConfig(unknownDamageYaml)).toThrow(
+      'Invalid configuration: Unknown identifier "ATK_typo" in expression "combat.damage" ("ATK_typo")'
     );
   });
 });

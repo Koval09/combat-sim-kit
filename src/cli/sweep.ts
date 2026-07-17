@@ -1,9 +1,43 @@
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import fs from 'fs';
 import { loadConfig } from '../config';
 import { loadFighter } from '../fighter';
 import { sweep } from '../sweep';
 import { formatSweepTable } from './formatter';
+
+function parseSeed(val: string): number {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed)) {
+    throw new InvalidArgumentError('Seed must be a valid integer.');
+  }
+  return parsed;
+}
+
+function parseBattles(val: string): number {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed) || parsed <= 0) {
+    throw new InvalidArgumentError('Number of battles must be a positive integer.');
+  }
+  return parsed;
+}
+
+function parseNumber(name: string) {
+  return (val: string): number => {
+    const parsed = parseFloat(val);
+    if (isNaN(parsed)) {
+      throw new InvalidArgumentError(`${name} must be a valid number.`);
+    }
+    return parsed;
+  };
+}
+
+function parseStep(val: string): number {
+  const parsed = parseFloat(val);
+  if (isNaN(parsed) || parsed <= 0) {
+    throw new InvalidArgumentError('Step must be a positive number.');
+  }
+  return parsed;
+}
 
 export const sweepCommand = new Command('sweep')
   .description('Run stat sweep analysis')
@@ -11,11 +45,11 @@ export const sweepCommand = new Command('sweep')
   .requiredOption('-a, --fighter-a <file>', 'path to fighter A YAML file')
   .requiredOption('-b, --fighter-b <file>', 'path to fighter B YAML file')
   .requiredOption('--stat <name>', 'name of the stat to sweep')
-  .requiredOption('--from <number>', 'starting value of the stat', (val) => parseFloat(val))
-  .requiredOption('--to <number>', 'ending value of the stat', (val) => parseFloat(val))
-  .requiredOption('--step <number>', 'step increment for the stat', (val) => parseFloat(val))
-  .option('-n, --battles <number>', 'number of battles per data point', (val) => parseInt(val, 10), 2000)
-  .option('--seed <number>', 'random seed (number) for the sweep simulation', (val) => parseInt(val, 10))
+  .requiredOption('--from <number>', 'starting value of the stat', parseNumber('From'))
+  .requiredOption('--to <number>', 'ending value of the stat', parseNumber('To'))
+  .requiredOption('--step <number>', 'step increment for the stat', parseStep)
+  .option('-n, --battles <number>', 'number of battles per data point', parseBattles, 2000)
+  .option('--seed <number>', 'random seed (number) for the sweep simulation', parseSeed)
   .option('--json <file>', 'export sweep results to a JSON file')
   .action((options) => {
     try {
@@ -49,8 +83,9 @@ export const sweepCommand = new Command('sweep')
         fs.writeFileSync(options.json, JSON.stringify(result, null, 2), 'utf-8');
         console.log(`Results successfully exported to ${options.json}`);
       }
-    } catch (err: any) {
-      console.error(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
       process.exit(1);
     }
   });

@@ -1,0 +1,62 @@
+{
+  "name": "combat-sim-kit",
+  "version": "0.1.0",
+  "description": "A config-driven Monte-Carlo combat balance simulator for turn-based games",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "combat-sim": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "game-balance",
+    "simulation",
+    "monte-carlo",
+    "combat",
+    "balancing",
+    "gamedev",
+    "cli"
+  ],
+  "author": "Koval09",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "expr-eval": "npm:expr-eval-fork@^3.0.0",
+    "yaml": "^2.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^20.14.9",
+    "eslint": "^9.16.0",
+    "prettier": "^3.3.2",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^4.0.0"
+  },
+  "overrides": {
+    "esbuild": ">=0.28.1"
+  }
+}

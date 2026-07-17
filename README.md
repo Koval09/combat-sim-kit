@@ -1,5 +1,8 @@
 # combat-sim-kit
 
+[![npm version](https://img.shields.io/npm/v/combat-sim-kit.svg)](https://www.npmjs.com/package/combat-sim-kit)
+[![CI Status](https://github.com/Koval09/combat-sim-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/Koval09/combat-sim-kit/actions/workflows/ci.yml)
+
 `combat-sim-kit` is a config-driven, Monte-Carlo combat balance simulator for turn-based games. 
 
 ## Pitch

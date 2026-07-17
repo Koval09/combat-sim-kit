@@ -69,28 +69,28 @@ combat:
 
 ### 2. Fighter Profiles (`cat.yaml` and `dog.yaml`)
 
-Define primary stat configurations:
+Define primary stat configurations (with 60 points allocated over base of 10):
 
 ```yaml
 # cat.yaml
 name: Agile Cat
 stats:
-  ATK: 60
-  DEF: 20
-  SPD: 130
-  VIT: 15
-  CRIT: 15
+  ATK: 20
+  DEF: 10
+  SPD: 40
+  VIT: 10
+  CRIT: 30
 ```
 
 ```yaml
 # dog.yaml
 name: Tanky Dog
 stats:
-  ATK: 45
-  DEF: 50
-  SPD: 80
-  VIT: 30
-  CRIT: 5
+  ATK: 20
+  DEF: 30
+  SPD: 10
+  VIT: 40
+  CRIT: 10
 ```
 
 ### 3. Command Line Interface (CLI)
@@ -102,17 +102,20 @@ combat-sim fight -c game.yaml -a cat.yaml -b dog.yaml --seed 42
 *Output:*
 ```text
 Using seed: 42
-[Round 01] Agile Cat hits Tanky Dog for 43.24 damage (HP: 466.76)
-[Round 01] Tanky Dog attacks Agile Cat, but Agile Cat DODGES! (HP: 330.00)
+[Round 01] Agile Cat hits Tanky Dog for 14.42 damage (HP: 615.58)
+[Round 01] Tanky Dog hits Agile Cat for 9.87 damage (HP: 260.13)
+[Round 02] Agile Cat hits Tanky Dog for 13.91 damage (HP: 601.67)
+[Round 02] Tanky Dog hits Agile Cat for 9.77 damage (HP: 250.36)
 ...
-[Round 11] Agile Cat hits Tanky Dog for 42.33 damage (HP: 0.00)
+[Round 23] Agile Cat hits Tanky Dog for 14.16 damage (HP: 5.61)
+[Round 23] Tanky Dog hits Agile Cat for 10.14 damage (HP: 0.00)
 
-Winner: A (KO)
+Winner: B (KO)
 ```
 
 #### Run Monte-Carlo Simulation (Win Rates)
 ```bash
-combat-sim run -c game.yaml -a cat.yaml -b dog.yaml -n 10000 --seed 42
+combat-sim run -c game.yaml -a cat.yaml -b dog.yaml --seed 42
 ```
 *Output:*
 ```text
@@ -120,36 +123,36 @@ Using seed: 42
 --------------------------------------------------
  Monte-Carlo Simulation Results (10000 battles)
 --------------------------------------------------
- Win Rate (Agile Cat):        86.20%
- Win Rate (Tanky Dog):        13.80%
+ Win Rate (Agile Cat):        0.00%
+ Win Rate (Tanky Dog):        100.00%
  Draw Rate:                   0.00%
  Timeout Rate:                0.00%
- Average Rounds:              11.86
- Median Rounds:               12
- Avg Damage/Round:            65.01
+ Average Rounds:              21.71
+ Median Rounds:               21
+ Avg Damage/Round:            26.80
 --------------------------------------------------
 ```
 
-#### Run Stat Sweep (Analyze Impact of Speed)
+#### Run Stat Sweep (Analyze Impact of ATK on Agile Cat)
 ```bash
-combat-sim sweep -c game.yaml -a cat.yaml -b dog.yaml --stat SPD --from 50 --to 150 --step 10 -n 2000 --seed 42
+combat-sim sweep -c game.yaml -a cat.yaml -b dog.yaml --stat ATK --from 20 --to 70 --step 5 -n 100 --seed 42
 ```
 *Output:*
 ```text
 Using seed: 42
-SPD        | Win Rate   | Avg Rds  | Win Rate Chart
+ATK        | Win Rate   | Avg Rds  | Win Rate Chart
 -----------+------------+----------+----------------------
-50         | 0.0%       | 9.3      | [░░░░░░░░░░░░░░░░░░░░]
-60         | 0.0%       | 9.4      | [░░░░░░░░░░░░░░░░░░░░]
-70         | 0.0%       | 9.4      | [░░░░░░░░░░░░░░░░░░░░]
-80         | 6.0%       | 9.9      | [█░░░░░░░░░░░░░░░░░░░]
-90         | 26.0%      | 10.3     | [█████░░░░░░░░░░░░░░░]
-100        | 42.0%      | 10.8     | [████████░░░░░░░░░░░░]
-110        | 62.0%      | 11.2     | [████████████░░░░░░░░]
-120        | 72.0%      | 11.5     | [██████████████░░░░░░]
-130        | 84.0%      | 11.9     | [█████████████████░░░]
-140        | 86.0%      | 11.8     | [█████████████████░░░]
-150        | 86.0%      | 11.8     | [█████████████████░░░]
+20         | 0.0%       | 21.8     | [░░░░░░░░░░░░░░░░░░░░]
+25         | 0.0%       | 21.8     | [░░░░░░░░░░░░░░░░░░░░]
+30         | 13.0%      | 21.5     | [███░░░░░░░░░░░░░░░░░]
+35         | 54.0%      | 20.3     | [███████████░░░░░░░░░]
+40         | 82.0%      | 18.3     | [████████████████░░░░]
+45         | 92.0%      | 16.3     | [██████████████████░░]
+50         | 99.0%      | 14.5     | [████████████████████]
+55         | 99.0%      | 13.0     | [████████████████████]
+60         | 100.0%     | 11.9     | [████████████████████]
+65         | 100.0%     | 10.8     | [████████████████████]
+70         | 100.0%     | 10.0     | [████████████████████]
 ```
 
 ### 4. Programmatic API
@@ -225,10 +228,25 @@ Formulas are parsed using a safe, customized `expr-eval` parser.
 
 ## Balancing Workflow
 
-1. **Aim for 45-55% Win Rate**: When pitting equal-cost builds or mirror matches against each other, aim for a win rate as close to 50% as possible.
-2. **Find Breakpoints via Sweep**: Execute a sweep on a stat (e.g. `DEF` or `SPD`).
-   Look for the slope in the ASCII bar chart. If the win rate jumps from 10% to 90% in a small range, you have discovered a balance cliff/breakpoint. Smoothing your formulas (e.g. adding diminishing returns like `absorbPct: DEF / (DEF + 300)`) will help flatten the curve and make the game feel more forgiving.
-3. **Control Timeouts**: If your timeout rate is high (e.g. > 5%), it indicates that defenses are too strong compared to offenses, or that characters have too much HP. Use the average rounds statistic to tune character durability.
+1. **Analyze Initial Build Balance**:
+   Pitting our example characters against each other using `combat-sim run` reveals a severe balance issue:
+   - **Agile Cat** (SPD/CRIT focus): **0.00%** win rate.
+   - **Tanky Dog** (DEF/VIT focus): **100.00%** win rate.
+   
+   Because Agile Cat's `ATK` (20) is low, its damage is almost completely negated by Tanky Dog's high `DEF` (30) combined with a huge HP pool (630 HP vs 270 HP).
+   
+2. **Identify Breakpoints via Sweep**:
+   To find how much `ATK` Agile Cat needs to stand a chance, we run `combat-sim sweep` on the `ATK` stat:
+   - At `ATK = 20-25`, the win rate is `0.0%` (complete negation).
+   - At `ATK = 30`, win rate rises to `13.0%`.
+   - At `ATK = 35`, win rate jumps to `54.0%` (the golden 50% balance mark).
+   - At `ATK = 40`, win rate is `82.0%`.
+   - At `ATK >= 50`, win rate is `99.0%` or higher.
+
+   This steep slope (from 0% to 99% in just 30 stat points) highlights a **balance cliff**. Designers can use this info to either boost Agile Cat's starting ATK, adjust the defense scaling formula (e.g. increase diminishing returns), or add alternative damage sources (like crit multipliers or armor-piercing stats).
+
+3. **Control Timeouts**:
+   In both runs, the **Timeout Rate** is `0.00%`. If you see high timeout rates, it indicates that defense or health pools are too high compared to offensive capabilities. Use this feedback loop to adjust overall stat weights.
 
 ---
 

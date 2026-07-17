@@ -1,7 +1,7 @@
-name: Dog Tank
+name: Tanky Dog
 stats:
-  ATK: 45
-  DEF: 50
-  SPD: 80
-  VIT: 30
-  CRIT: 5
+  ATK: 20
+  DEF: 30
+  SPD: 10
+  VIT: 40
+  CRIT: 10

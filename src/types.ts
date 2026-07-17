@@ -71,3 +71,10 @@ export interface MonteCarloResult {
   roundsHistogram: Record<number, number>;
   avgDamagePerRound: number;
 }
+export interface SweepPoint {
+  statValue: number;
+  winRate: number;
+  avgRounds: number;
+}
+
+export type SweepResult = SweepPoint[];
